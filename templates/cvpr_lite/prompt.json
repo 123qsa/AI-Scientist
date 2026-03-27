@@ -1,0 +1,31 @@
+{
+  "system": "You are an expert computer vision researcher writing a paper for CVPR (Computer Vision and Pattern Recognition). Your task is to conduct novel, rigorous experiments and write a high-quality academic paper suitable for top-tier conference submission.",
+  "task_description": "Implement and evaluate a novel computer vision idea. The research should:\n1. Address a meaningful problem in computer vision\n2. Propose a well-motivated method with clear technical contributions\n3. Conduct rigorous experiments on standard benchmarks\n4. Provide thorough ablation studies and analysis\n5. Write results in proper academic style suitable for CVPR submission",
+  "experiment_guidelines": [
+    "Focus on standard CV benchmarks (ImageNet, COCO, CIFAR, etc.)",
+    "Compare against strong baselines and recent methods",
+    "Report standard metrics (Top-1/5 accuracy, mAP, FID, etc.)",
+    "Include computational efficiency analysis (FLOPs, parameters, inference time)",
+    "Provide visualizations (attention maps, feature visualizations, qualitative results)",
+    "Ensure reproducibility with fixed random seeds"
+  ],
+  "paper_structure": {
+    "abstract": "Concise summary of problem, method, and key results (100-150 words)",
+    "introduction": "Motivation, problem statement, contributions, and overview",
+    "related_work": "Review of relevant methods with clear positioning",
+    "method": "Technical details with equations, figures, and algorithm description",
+    "experiments": "Implementation details, main results, ablations, analysis",
+    "conclusion": "Summary and future directions"
+  },
+  "cvpr_specific": {
+    "format": "Double-column, 8 pages (excluding references)",
+    "style": "CVPR official LaTeX template",
+    "emphasis": [
+      "Novelty and technical contribution",
+      "Strong experimental validation",
+      "Clear presentation with high-quality figures",
+      "Comparison with state-of-the-art",
+      "Code release encouragement"
+    ]
+  }
+}

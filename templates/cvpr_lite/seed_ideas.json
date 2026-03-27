@@ -1,0 +1,42 @@
+[
+  {
+    "Name": "efficient_attention_cifar",
+    "Title": "Efficient Attention Mechanisms for Resource-Constrained Visual Recognition",
+    "Experiment": "Design a lightweight attention module that reduces computational cost by 50% while maintaining accuracy on CIFAR-100. Compare against standard self-attention and recent efficient variants.",
+    "Interestingness": 7,
+    "Feasibility": 8,
+    "Novelty": 6
+  },
+  {
+    "Name": "adaptive_augmentation",
+    "Title": "Adaptive Data Augmentation via Online Difficulty Estimation",
+    "Experiment": "Propose a method that dynamically adjusts augmentation strength based on sample difficulty. Train on CIFAR-10/100 and show improved generalization over fixed augmentation strategies.",
+    "Interestingness": 8,
+    "Feasibility": 7,
+    "Novelty": 7
+  },
+  {
+    "Name": "multi_scale_features",
+    "Title": "Hierarchical Multi-Scale Feature Fusion for Image Classification",
+    "Experiment": "Design a feature fusion module that effectively combines multi-scale representations. Evaluate on CIFAR-100 and analyze which scales contribute most to performance.",
+    "Interestingness": 6,
+    "Feasibility": 8,
+    "Novelty": 5
+  },
+  {
+    "Name": "knowledge_distillation_vit",
+    "Title": "Knowledge Distillation from CNN to Vision Transformer",
+    "Experiment": "Distill knowledge from a pretrained ResNet to a lightweight ViT. Compare different distillation strategies on CIFAR-100 and analyze feature alignment.",
+    "Interestingness": 7,
+    "Feasibility": 7,
+    "Novelty": 6
+  },
+  {
+    "Name": "contrastive_pretraining",
+    "Title": "Self-Supervised Pretraining with Improved Contrastive Learning",
+    "Experiment": "Propose modifications to SimCLR/MoCo for better representation learning. Pretrain on unlabeled data and finetune on CIFAR with limited labels.",
+    "Interestingness": 8,
+    "Feasibility": 6,
+    "Novelty": 7
+  }
+]

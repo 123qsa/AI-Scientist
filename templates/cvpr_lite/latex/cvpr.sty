@@ -1,0 +1,59 @@
+% CVPR Paper Formatting Style
+% Simplified version for AI-Scientist
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cvpr}[2024/09/25 CVPR Paper Formatting Style]
+
+% Required packages
+\RequirePackage[final]{graphicx}
+\RequirePackage{times}
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+
+% Page dimensions for letter paper
+\setlength{\paperwidth}{8.5in}
+\setlength{\paperheight}{11in}
+\setlength{\textwidth}{6.875in}
+\setlength{\textheight}{8.875in}
+\setlength{\oddsidemargin}{0.125in}
+\setlength{\evensidemargin}{0.125in}
+\setlength{\topmargin}{0.0in}
+\setlength{\headheight}{0.0in}
+\setlength{\headsep}{0.0in}
+\setlength{\footskip}{0.5in}
+\setlength{\columnsep}{0.25in}
+
+% Two column mode
+\twocolumn
+\sloppy
+\flushbottom
+
+% Section formatting
+\renewcommand{\section}{\@startsection{section}{1}{\z@}
+   {10pt plus 2pt minus 2pt}{7pt plus 2pt minus 2pt}{\large\bf}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}
+   {8pt plus 2pt minus 2pt}{6pt plus 2pt minus 2pt}{\normalsize\bf}}
+
+% Define final copy command
+\newcommand{\cvprfinalcopy}{\def\cvpr@final{1}}
+\def\cvpr@final{0}
+
+% Title formatting
+\def\maketitle{\par
+\begingroup
+\twocolumn[\@maketitle]
+\endgroup
+\setcounter{footnote}{0}
+\let\maketitle\relax
+\let\@maketitle\relax}
+
+\def\@maketitle{\newpage
+\vbox{\hsize\textwidth
+\linewidth\hsize
+\centering
+{\LARGE\bfseries\@title\par}
+\vskip 0.2in
+{\large\begin{tabular}[t]{c}\@author\end{tabular}\par}
+\vskip 0.1in}}
+
+\endinput

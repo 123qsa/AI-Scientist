@@ -22,6 +22,16 @@ from ai_scientist.perform_writeup import perform_writeup, generate_latex
 NUM_REFLECTIONS = 3
 
 
+def import_cvpr_modules():
+    """动态导入 CVPR 模块，避免循环依赖"""
+    try:
+        from cvpr_auto.iteration_controller import IterationController
+        from cvpr_auto.config import config as cvpr_config
+        return IterationController, cvpr_config
+    except ImportError:
+        return None, None
+
+
 def print_time():
     print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -88,6 +98,41 @@ def parse_arguments():
         default="openalex",
         choices=["semanticscholar", "openalex"],
         help="Scholar engine to use.",
+    )
+    # CVPR-Auto 模式参数
+    parser.add_argument(
+        "--cvpr-mode",
+        action="store_true",
+        help="启用 CVPR-Auto 迭代改进模式（多轮实验-论文-评审-改进）",
+    )
+    parser.add_argument(
+        "--max-iterations",
+        type=int,
+        default=3,
+        help="CVPR 模式下的最大迭代次数",
+    )
+    parser.add_argument(
+        "--quality-threshold",
+        type=float,
+        default=7.5,
+        help="论文质量阈值（低于此分数会触发改进）",
+    )
+    parser.add_argument(
+        "--paper-driven",
+        action="store_true",
+        help="使用文献驱动的方式生成想法（读取最新论文）",
+    )
+    parser.add_argument(
+        "--venues",
+        nargs="+",
+        default=["CVPR", "ICCV", "ECCV"],
+        help="文献驱动模式下关注的会议",
+    )
+    parser.add_argument(
+        "--keywords",
+        type=str,
+        default="efficient architecture,vision transformer",
+        help="文献驱动模式下的关键词（逗号分隔）",
     )
     return parser.parse_args()
 
@@ -325,6 +370,128 @@ def do_idea(
 if __name__ == "__main__":
     args = parse_arguments()
 
+    # CVPR 模式：使用文献驱动生成想法 + 迭代改进
+    if args.cvpr_mode:
+        print("=" * 70)
+        print("🎯 CVPR-Auto 模式启动")
+        print("=" * 70)
+
+        IterationController, cvpr_config = import_cvpr_modules()
+        if IterationController is None:
+            print("❌ 无法导入 CVPR 模块，请确保 cvpr_auto/ 目录存在")
+            sys.exit(1)
+
+        # 文献驱动生成想法
+        if args.paper_driven:
+            print("\n📚 使用文献驱动模式生成想法...")
+            try:
+                from cvpr_auto.paper_tracker import PaperDrivenIdeaPipeline
+
+                pipeline = PaperDrivenIdeaPipeline()
+                keywords = [k.strip() for k in args.keywords.split(",")]
+                gaps, ideas = pipeline.run_full_pipeline(
+                    venues=args.venues,
+                    keywords=keywords,
+                    days=90,
+                    max_papers=50
+                )
+
+                # 转换想法格式
+                novel_ideas = []
+                for i, idea in enumerate(ideas[:args.num_ideas]):
+                    novel_ideas.append({
+                        "Name": f"cvpr_idea_{i+1}",
+                        "Title": idea.get("title", "Untitled"),
+                        "Experiment": idea.get("solution", ""),
+                        "novel": True,
+                        "idea": idea
+                    })
+
+                print(f"\n✓ 文献驱动生成了 {len(novel_ideas)} 个想法")
+
+            except Exception as e:
+                print(f"⚠️ 文献驱动失败，回退到标准模式: {e}")
+                args.paper_driven = False
+
+        # 标准想法生成（如果不是文献驱动或文献驱动失败）
+        if not args.paper_driven:
+            client, client_model = create_client(args.model)
+            base_dir = osp.join("templates", args.experiment)
+            results_dir = osp.join("results", args.experiment)
+
+            ideas = generate_ideas(
+                base_dir,
+                client=client,
+                model=client_model,
+                skip_generation=args.skip_idea_generation,
+                max_num_generations=args.num_ideas,
+                num_reflections=NUM_REFLECTIONS,
+            )
+            if not args.skip_novelty_check:
+                ideas = check_idea_novelty(
+                    ideas,
+                    base_dir=base_dir,
+                    client=client,
+                    model=client_model,
+                    engine=args.engine,
+                )
+
+            with open(osp.join(base_dir, "ideas.json"), "w") as f:
+                json.dump(ideas, f, indent=4)
+
+            novel_ideas = [idea for idea in ideas if idea.get("novel", True)]
+
+        # 启动 CVPR 迭代流程
+        print(f"\n🚀 启动 CVPR 迭代改进流程（最多 {args.max_iterations} 轮）")
+
+        for idea in novel_ideas:
+            print(f"\n{'='*70}")
+            print(f"处理想法: {idea['Name']}")
+            print(f"{'='*70}")
+
+            try:
+                # 创建输出目录
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                idea_folder = f"{timestamp}_{idea['Name']}"
+                output_dir = osp.join("results", "cvpr", idea_folder)
+                os.makedirs(output_dir, exist_ok=True)
+
+                # 初始化迭代控制器
+                controller = IterationController(
+                    base_dir=osp.join("templates", args.experiment),
+                    output_dir=output_dir,
+                    idea=idea,
+                    llm_client=client if 'client' in locals() else create_client(args.model)[0],
+                    quality_thresholds={
+                        "novelty_score": args.quality_threshold,
+                        "experiment_rigor": args.quality_threshold,
+                        "writing_quality": args.quality_threshold,
+                        "min_improvement": 1.0,
+                    },
+                    max_iterations=args.max_iterations,
+                    remote_server=None  # 本地运行，如需远程可配置
+                )
+
+                # 运行迭代循环
+                final_results = controller.run_iteration_loop()
+
+                print(f"\n✓ 想法 {idea['Name']} 完成")
+                print(f"  最终质量分数: {final_results.get('final_quality', 'N/A')}")
+                print(f"  总迭代次数: {final_results.get('iterations', 0)}")
+                print(f"  输出目录: {output_dir}")
+
+            except Exception as e:
+                print(f"❌ 处理想法 {idea['Name']} 失败: {e}")
+                import traceback
+                print(traceback.format_exc())
+                continue
+
+        print("\n" + "=" * 70)
+        print("CVPR-Auto 模式完成！")
+        print("=" * 70)
+        sys.exit(0)
+
+    # 标准模式（原有逻辑）
     # Check available GPUs and adjust parallel processes if necessary
     available_gpus = get_available_gpus(args.gpus)
     if args.parallel > len(available_gpus):

@@ -1,0 +1,155 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+% CVPR packages
+\usepackage[final]{cvpr}
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{color}
+\usepackage{url}
+
+% Include other packages as needed
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% If you comment hyperref and then uncomment it, you should delete
+% egpaper.aux before re-running latex.  (Or just hit 'q' on the first latex
+% run, let it finish, and you should be clear).
+\usepackage[pagebackref,breaklinks,colorlinks]{hyperref}
+
+% Support for easy cross-referencing
+\usepackage[capitalize]{cleveref}
+\crefname{section}{Sec.}{Secs.}
+\Crefname{section}{Section}{Sections}
+\Crefname{table}{Table}{Tables}
+\crefname{table}{Tab.}{Tabs.}
+
+% Page style
+\cvprfinalcopy % *** Uncomment this line for the final submission
+
+\def\cvprPaperID{*****} % *** Enter the CVPR Paper ID here
+\def\confName{CVPR}
+\def\confYear{2025}
+
+\begin{document}
+
+% Title
+\title{Paper Title}
+
+% Authors
+\author{
+Anonymous Authors\\
+Institution\\
+\tt\small anonymous@institution.edu
+}
+
+\maketitle
+% Remove page # from the first page of camera-ready.
+\thispagestyle{empty}
+
+%%%%%%%%% ABSTRACT
+\begin{abstract}
+Your abstract here. Summarize the problem, proposed method, and key results in 100-150 words.
+\end{abstract}
+
+%%%%%%%%% BODY TEXT
+\section{Introduction}
+\label{sec:intro}
+
+Introduction here. Motivate the problem, state your contributions clearly, and provide an overview of the paper structure.
+
+\textbf{Contributions:}
+\begin{itemize}
+    \item First contribution
+    \item Second contribution
+    \item Third contribution
+\end{itemize}
+
+\section{Related Work}
+\label{sec:related}
+
+Review related work here. Position your method relative to existing approaches.
+
+\section{Method}
+\label{sec:method}
+
+Describe your method in detail. Include:
+\begin{itemize}
+    \item Problem formulation
+    \item Technical details with equations
+    \item Architecture diagrams (use figures)
+    \item Algorithm pseudocode if applicable
+\end{itemize}
+
+\subsection{Overview}
+
+Provide an overview of your approach.
+
+\subsection{Detailed Design}
+
+Describe the technical details.
+
+\begin{equation}
+    \mathcal{L} = \mathcal{L}_{cls} + \lambda \mathcal{L}_{reg}
+\end{equation}
+
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Experimental Setup}
+
+Describe:
+\begin{itemize}
+    \item Datasets used
+    \item Evaluation metrics
+    \item Implementation details (optimizer, learning rate, etc.)
+    \item Hardware used
+\end{itemize}
+
+\subsection{Main Results}
+
+Present your main results with tables and figures. Compare against baselines and state-of-the-art methods.
+
+\begin{table}[t]
+\centering
+\caption{Comparison with state-of-the-art methods on CIFAR-100.}
+\label{tab:main_results}
+\begin{tabular}{lccc}
+\toprule
+Method & Params & Top-1 Acc & Top-5 Acc \\
+\midrule
+Baseline & 11M & 75.0 & 92.5 \\
+Proposed & 10M & \textbf{78.5} & \textbf{94.2} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ablation Studies}
+
+Conduct ablation studies to validate design choices.
+
+\subsection{Analysis}
+
+Provide additional analysis, visualizations, and insights.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+Summarize your work, restate key findings, and discuss limitations and future directions.
+
+\textbf{Limitations:} Discuss limitations of your method.
+
+\textbf{Future Work:} Suggest directions for future research.
+
+%%%%%%%%% REFERENCES
+{\small
+\bibliographystyle{ieee_fullname}
+\bibliography{references}
+}
+
+\end{document}
