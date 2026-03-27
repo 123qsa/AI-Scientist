@@ -4,6 +4,8 @@ aider-chat
 backoff
 openai
 google-generativeai
+# Web UI
+gradio>=4.0.0
 # Viz
 matplotlib
 pypdf

@@ -48,7 +48,7 @@ def parse_arguments():
     parser.add_argument(
         "--model",
         type=str,
-        default="claude-3-5-sonnet-20240620",
+        default="kimi-k2.5",
         choices=AVAILABLE_LLMS,
         help="Model to use for AI Scientist.",
     )
@@ -85,7 +85,7 @@ def parse_arguments():
     parser.add_argument(
         "--engine",
         type=str,
-        default="semanticscholar",
+        default="openalex",
         choices=["semanticscholar", "openalex"],
         help="Scholar engine to use.",
     )
@@ -204,6 +204,8 @@ def do_idea(
             main_model = Model("deepseek/deepseek-reasoner")
         elif model == "llama3.1-405b":
             main_model = Model("openrouter/meta-llama/llama-3.1-405b-instruct")
+        elif model.startswith("kimi-"):
+            main_model = Model(f"moonshot/{model}")
         else:
             main_model = Model(model)
         coder = Coder.create(
@@ -240,6 +242,8 @@ def do_idea(
                 main_model = Model("deepseek/deepseek-reasoner")
             elif model == "llama3.1-405b":
                 main_model = Model("openrouter/meta-llama/llama-3.1-405b-instruct")
+            elif model.startswith("kimi-"):
+                main_model = Model(f"moonshot/{model}")
             else:
                 main_model = Model(model)
             coder = Coder.create(
