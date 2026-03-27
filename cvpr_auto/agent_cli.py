@@ -177,8 +177,8 @@ def main():
                            help="生成想法数量")
     run_parser.add_argument("--template", default="cvpr_lite",
                            help="实验模板")
-    run_parser.add_argument("--max-iterations", type=int, default=2,
-                           help="最大迭代次数")
+    run_parser.add_argument("--max-iterations", type=int, default=5,
+                           help="最大迭代次数 (1-20)"))
     run_parser.add_argument("--compute-budget", default="medium",
                            choices=["low", "medium", "high"],
                            help="计算预算")

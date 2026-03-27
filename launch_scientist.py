@@ -108,8 +108,8 @@ def parse_arguments():
     parser.add_argument(
         "--max-iterations",
         type=int,
-        default=3,
-        help="CVPR 模式下的最大迭代次数",
+        default=5,
+        help="CVPR 模式下的最大迭代次数 (1-20)",
     )
     parser.add_argument(
         "--quality-threshold",

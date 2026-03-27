@@ -145,7 +145,7 @@ class RemoteServerManager:
         model: str,
         num_ideas: int = 3,
         cvpr_mode: bool = True,
-        max_iterations: int = 2,
+        max_iterations: int = 5,
         **kwargs
     ) -> str:
         """在远程服务器运行实验"""

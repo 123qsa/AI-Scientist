@@ -294,7 +294,7 @@ def main():
     deploy_parser.add_argument("--model", default="kimi-k2.5", help="LLM模型")
     deploy_parser.add_argument("--num-ideas", type=int, default=3, help="想法数量")
     deploy_parser.add_argument("--cvpr-mode", action="store_true", default=True, help="启用CVPR模式")
-    deploy_parser.add_argument("--max-iterations", type=int, default=2, help="最大迭代次数")
+    deploy_parser.add_argument("--max-iterations", type=int, default=5, help="最大迭代次数 (1-20)")
     deploy_parser.add_argument("--quality-threshold", type=float, default=7.5, help="质量阈值")
     deploy_parser.add_argument("--parallel", type=int, default=0, help="并行进程数")
     deploy_parser.add_argument("--no-improvement", action="store_true", help="禁用论文改进")

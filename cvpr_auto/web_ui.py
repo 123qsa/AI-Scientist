@@ -69,8 +69,8 @@ def validate_config(
         return False, "请选择一个模型"
     if num_ideas < 1 or num_ideas > 50:
         return False, "想法数量必须在 1-50 之间"
-    if max_iterations < 1 or max_iterations > 10:
-        return False, "迭代次数必须在 1-10 之间"
+    if max_iterations < 1 or max_iterations > 20:
+        return False, "迭代次数必须在 1-20 之间"
     if quality_threshold < 1 or quality_threshold > 10:
         return False, "质量阈值必须在 1-10 之间"
     return True, "配置有效"
@@ -236,7 +236,7 @@ def create_ui() -> gr.Blocks:
                         value=True,
                     )
                     max_iterations = gr.Slider(
-                        minimum=1, maximum=5, value=2, step=1,
+                        minimum=1, maximum=20, value=5, step=1,
                         label="最大迭代次数"
                     )
                     quality_threshold = gr.Slider(
