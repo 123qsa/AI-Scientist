@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  cvpr-auto:
+    build: .
+    image: cvpr-auto:latest
+    container_name: cvpr-auto
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - LLM_PROVIDER=kimi
+      - OPENALEX_MAIL_ADDRESS=${OPENALEX_MAIL_ADDRESS}
+    volumes:
+      - ./cvpr_outputs:/workspace/cvpr_outputs
+      - ./data:/workspace/data
+      - ${HOME}/.kimi:/root/.kimi  # Kimi CLI 凭证
+    ports:
+      - "7860:7860"
+    stdin_open: true
+    tty: true
+    command: python3 -m cvpr_auto.main --help

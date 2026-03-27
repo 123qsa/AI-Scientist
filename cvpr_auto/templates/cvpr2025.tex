@@ -1,0 +1,136 @@
+% CVPR 2025 Latex Template
+% Based on official CVPR style
+
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+% CVPR style package
+\usepackage[review]{cvpr}
+
+% Basic packages
+\usepackage{times}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{subcaption}
+\usepackage{color}
+\usepackage{colortbl}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{pifont}
+\usepackage{array}
+\usepackage{tabularx}
+
+% Hyperlinks
+\usepackage[pagebackref=true,breaklinks=true,letterpaper=true,colorlinks,bookmarks=false]{hyperref}
+
+% Citation style
+\usepackage[numbers]{natbib}
+
+% Custom commands
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+\newcommand{\highlight}[1]{\colorbox{yellow}{#1}}
+
+% Math operators
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% CVPR-specific settings
+\cvprfinalcopy
+\def\cvprPaperID{****}
+\def\httilde{\mbox{\tt\char`\~}}
+
+% Page setup
+\begin{document}
+
+% Title
+\title{<<PAPER_TITLE>>}
+
+% Authors (anonymized for review)
+\author{\\
+<<AUTHORS>>
+}
+
+\maketitle
+
+% Abstract
+\begin{abstract}
+<<ABSTRACT>>
+\end{abstract}
+
+% Keywords
+\noindent\textbf{Keywords:} <<KEYWORDS>>
+
+\section{Introduction}
+\label{sec:intro}
+<<INTRODUCTION>>
+
+\textbf{Contributions.} Our main contributions are summarized as follows:
+\begin{itemize}
+<<CONTRIBUTIONS>>
+\end{itemize}
+
+\section{Related Work}
+\label{sec:related}
+<<RELATED_WORK>>
+
+\section{Method}
+\label{sec:method}
+<<METHOD>>
+
+\subsection{Preliminaries}
+\label{sec:prelim}
+<<PRELIMINARIES>>
+
+\subsection{Proposed Approach}
+\label{sec:approach}
+<<APPROACH>>
+
+\subsection{Implementation Details}
+\label{sec:implementation}
+<<IMPLEMENTATION>>
+
+\section{Experiments}
+\label{sec:experiments}
+<<EXPERIMENTS>>
+
+\subsection{Experimental Setup}
+\label{sec:setup}
+<<SETUP>>
+
+\subsection{Main Results}
+\label{sec:results}
+<<MAIN_RESULTS>>
+
+\subsection{Ablation Studies}
+\label{sec:ablation}
+<<ABLATION>>
+
+\subsection{Analysis and Visualization}
+\label{sec:analysis}
+<<ANALYSIS>>
+
+\section{Conclusion}
+\label{sec:conclusion}
+<<CONCLUSION>>
+
+\section*{Acknowledgments}
+<<ACKNOWLEDGMENTS>>
+
+% References
+{\small
+\bibliographystyle{ieee_fullname}
+\bibliography{references}
+}
+
+% Supplementary material
+\clearpage
+\appendix
+\section{Supplementary Material}
+<<SUPPLEMENTARY>>
+
+\end{document}
