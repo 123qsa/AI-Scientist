@@ -349,13 +349,26 @@ def train(dataset="shakespeare_char", out_dir="run_0", seed_offset=0):
     # DDP settings
     backend = "nccl"  # 'nccl', 'gloo', etc.
     # system
-    device = "cuda"  # Always use CUDA
-    dtype = (
-        "bfloat16"
-        if torch.cuda.is_available() and torch.cuda.is_bf16_supported()
-        else "float16"
-    )  # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
-    compile = True  # do not torch compile the model on macbooks
+    # system
+    if torch.cuda.is_available():
+        device = "cuda"
+    elif torch.backends.mps.is_available():
+        device = "mps"
+    else:
+        device = "cpu"
+    print(f"Using device: {device}")
+
+    if device == "cuda":
+        dtype = (
+            "bfloat16"
+            if torch.cuda.is_bf16_supported()
+            else "float16"
+        )
+    elif device == "mps":
+        dtype = "float16"
+    else:
+        dtype = "float32"
+    compile = False if device == "mps" else True  # disable compile on macbooks
 
     # various inits, derived attributes, I/O setup
     # if not ddp, we are running on a single gpu, and one process
@@ -366,11 +379,12 @@ def train(dataset="shakespeare_char", out_dir="run_0", seed_offset=0):
     if master_process:
         os.makedirs(out_dir, exist_ok=True)
     torch.manual_seed(1337 + seed_offset)
-    torch.backends.cuda.matmul.allow_tf32 = True  # allow tf32 on matmul
-    torch.backends.cudnn.allow_tf32 = True  # allow tf32 on cudnn
+    if device == "cuda":
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
     device_type = (
-        "cuda" if "cuda" in device else "cpu"
-    )  # for later use in torch.autocast
+        "cuda" if "cuda" in device else ("mps" if "mps" in device else "cpu")
+    )
     # note: float16 data type will automatically use a GradScaler
     ptdtype = {
         "float32": torch.float32,
@@ -410,11 +424,13 @@ def train(dataset="shakespeare_char", out_dir="run_0", seed_offset=0):
                 for i in ix
             ]
         )
-        if device_type == "cuda":
-            # pin arrays x,y, which allows us to move them to GPU asynchronously (non_blocking=True)
-            x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(
-                device, non_blocking=True
-            )
+        if device_type == "cuda" or device_type == "mps":
+            if device_type == "cuda":
+                x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(
+                    device, non_blocking=True
+                )
+            else:
+                x, y = x.to(device), y.to(device)
         else:
             x, y = x.to(device), y.to(device)
         return x, y
@@ -460,7 +476,7 @@ def train(dataset="shakespeare_char", out_dir="run_0", seed_offset=0):
     model.to(device)
 
     # initialize a GradScaler. If enabled=False scaler is a no-op
-    scaler = torch.cuda.amp.GradScaler(enabled=(dtype == "float16"))
+    scaler = torch.cuda.amp.GradScaler(enabled=(dtype == "float16" and device == "cuda"))
 
     # optimizer
     optimizer = model.configure_optimizers(

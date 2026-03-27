@@ -1,14 +1,75 @@
 import json
 import os
 import re
+import subprocess
 
 import anthropic
 import backoff
 import openai
+import httpx
 import google.generativeai as genai
 from google.generativeai.types import GenerationConfig
 
 MAX_NUM_TOKENS = 4096
+
+# Path to Kimi CLI OAuth credentials
+KIMI_OAUTH_CREDENTIALS_PATH = os.path.expanduser("~/.kimi/credentials/kimi-code.json")
+
+
+def get_kimi_oauth_token():
+    """
+    Read Kimi OAuth token from Kimi CLI credentials file.
+    Returns the access token if found, None otherwise.
+    """
+    if not os.path.exists(KIMI_OAUTH_CREDENTIALS_PATH):
+        return None
+
+    try:
+        with open(KIMI_OAUTH_CREDENTIALS_PATH, 'r') as f:
+            credentials = json.load(f)
+        # Try different possible token keys based on Kimi CLI format
+        token = (credentials.get('access_token') or
+                 credentials.get('token') or
+                 credentials.get('accessToken'))
+        if token:
+            return token
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"Warning: Failed to read Kimi OAuth credentials: {e}")
+
+    return None
+
+
+def check_kimi_cli_installed():
+    """Check if Kimi CLI is installed."""
+    try:
+        subprocess.run(['kimi', '--version'],
+                       capture_output=True,
+                       check=True)
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
+
+def validate_kimi_oauth():
+    """
+    Validate Kimi OAuth setup and return status information.
+    Returns tuple: (is_valid, message)
+    """
+    if not os.path.exists(KIMI_OAUTH_CREDENTIALS_PATH):
+        if check_kimi_cli_installed():
+            return (False,
+                    "Kimi CLI installed but not logged in. Run 'kimi login' first.")
+        else:
+            return (False,
+                    "Kimi CLI not installed. Install with: pip install kimi-cli")
+
+    token = get_kimi_oauth_token()
+    if not token:
+        return (False,
+                "Kimi credentials file exists but no valid token found. "
+                "Try running 'kimi login' again.")
+
+    return (True, "OAuth token found and ready to use.")
 
 AVAILABLE_LLMS = [
     # Anthropic models
@@ -59,6 +120,9 @@ AVAILABLE_LLMS = [
     "gemini-2.0-flash-thinking-exp-01-21",
     "gemini-2.5-pro-preview-03-25",
     "gemini-2.5-pro-exp-03-25",
+    # Kimi models (Moonshot AI)
+    "kimi-k2.5",
+    "kimi-k2",
 ]
 
 
@@ -99,6 +163,24 @@ def get_batch_responses_from_llm(
         new_msg_history = msg_history + [{"role": "user", "content": msg}]
         response = client.chat.completions.create(
             model="meta-llama/llama-3.1-405b-instruct",
+            messages=[
+                {"role": "system", "content": system_message},
+                *new_msg_history,
+            ],
+            temperature=temperature,
+            max_tokens=MAX_NUM_TOKENS,
+            n=n_responses,
+            stop=None,
+        )
+        content = [r.message.content for r in response.choices]
+        new_msg_history = [
+            new_msg_history + [{"role": "assistant", "content": c}] for c in content
+        ]
+    elif model.startswith("kimi-"):
+        # Kimi supports n_responses natively via OpenAI-compatible API
+        new_msg_history = msg_history + [{"role": "user", "content": msg}]
+        response = client.chat.completions.create(
+            model=model,
             messages=[
                 {"role": "system", "content": system_message},
                 *new_msg_history,
@@ -271,6 +353,21 @@ def get_response_from_llm(
         )
         content = response.choices[0].message.content
         new_msg_history = new_msg_history + [{"role": "assistant", "content": content}]
+    elif model.startswith("kimi-"):
+        new_msg_history = msg_history + [{"role": "user", "content": msg}]
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_message},
+                *new_msg_history,
+            ],
+            temperature=temperature,
+            max_tokens=MAX_NUM_TOKENS,
+            n=1,
+            stop=None,
+        )
+        content = response.choices[0].message.content
+        new_msg_history = new_msg_history + [{"role": "assistant", "content": content}]
     else:
         raise ValueError(f"Model {model} not supported.")
 
@@ -347,5 +444,30 @@ def create_client(model):
             api_key=os.environ["GEMINI_API_KEY"],
             base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
         ), model
+    elif model.startswith("kimi-"):
+        # Try OAuth first (from Kimi CLI), then fall back to API key
+        oauth_token = get_kimi_oauth_token()
+        if oauth_token:
+            print(f"Using Moonshot AI (Kimi) OAuth authentication with {model}.")
+            print(f"  (Credentials loaded from: {KIMI_OAUTH_CREDENTIALS_PATH})")
+            print(f"  (Using kimi CLI subprocess for API calls)")
+            # Use subprocess-based client that calls kimi CLI directly
+            from ai_scientist.kimi_cli_client import KimiCLIClient
+            return KimiCLIClient(model), model
+        else:
+            # Check OAuth status for better error messages
+            is_valid, message = validate_kimi_oauth()
+            if not is_valid:
+                print(f"Note: {message}")
+            print(f"Using Moonshot AI (Kimi) API Key with {model}.")
+            if "KIMI_API_KEY" not in os.environ:
+                raise ValueError(
+                    "KIMI_API_KEY environment variable not set. "
+                    "Either set KIMI_API_KEY or run 'kimi login' to use OAuth."
+                )
+            return openai.OpenAI(
+                api_key=os.environ["KIMI_API_KEY"],
+                base_url="https://api.moonshot.cn/v1"
+            ), model
     else:
         raise ValueError(f"Model {model} not supported.")

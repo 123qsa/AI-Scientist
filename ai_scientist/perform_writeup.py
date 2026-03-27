@@ -560,6 +560,8 @@ if __name__ == "__main__":
         main_model = Model("deepseek/deepseek-coder")
     elif args.model == "llama3.1-405b":
         main_model = Model("openrouter/meta-llama/llama-3.1-405b-instruct")
+    elif args.model.startswith("kimi-"):
+        main_model = Model(f"moonshot/{args.model}")
     else:
         main_model = Model(model)
     coder = Coder.create(
