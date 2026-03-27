@@ -13,6 +13,7 @@ import copy
 
 from cvpr_auto.config import config
 from cvpr_auto.self_review import SelfReviewer, QualityGate
+from cvpr_auto.llm_client import get_llm_client, LLMResponse
 
 
 @dataclass
@@ -302,15 +303,37 @@ class IterationController:
         self,
         experiment_runner: Callable,
         paper_generator: Callable,
-        llm_client=None
+        llm_client=None,
+        llm_provider: str = None,
+        llm_model: str = None
     ):
         self.experiment_runner = experiment_runner
         self.paper_generator = paper_generator
-        self.llm_client = llm_client
+
+        # 初始化 LLM 客户端
+        if llm_client:
+            self.llm_client = llm_client
+        elif llm_provider:
+            try:
+                self.llm_client = get_llm_client(llm_provider, llm_model)
+                print(f"✓ LLM client initialized: {llm_provider}" +
+                      (f" ({llm_model})" if llm_model else ""))
+            except Exception as e:
+                print(f"⚠️ Failed to initialize LLM client: {e}")
+                print("  Falling back to simple improvements without LLM")
+                self.llm_client = None
+        else:
+            # 尝试默认配置
+            try:
+                self.llm_client = get_llm_client()
+                print("✓ LLM client initialized with default settings")
+            except Exception as e:
+                print(f"⚠️ No LLM client available: {e}")
+                self.llm_client = None
 
         self.reviewer = SelfReviewer(config.QUALITY_THRESHOLDS)
         self.quality_gate = QualityGate(config.QUALITY_THRESHOLDS)
-        self.improvement_gen = ImprovementGenerator(llm_client)
+        self.improvement_gen = ImprovementGenerator(self.llm_client)
 
         self.iteration_history: List[IterationState] = []
         self.max_rounds = config.MAX_REVISION_ROUNDS
@@ -361,7 +384,9 @@ class IterationController:
                 current_paper = self.paper_generator(initial_idea, current_experiments)
             else:
                 if hasattr(self, '_pending_paper_improvements'):
-                    current_paper = self._apply_paper_improvements(
+                    print(f"\n📝 Applying paper improvements with " +
+                          ("LLM..." if self.llm_client else "simple editing..."))
+                    current_paper = self._apply_paper_improvements_with_llm(
                         current_paper,
                         self._pending_paper_improvements
                     )
@@ -470,19 +495,68 @@ class IterationController:
 
         return updated
 
-    def _apply_paper_improvements(
+    def _apply_paper_improvements_with_llm(
         self,
         current_paper: Dict,
         improvements: List[Dict]
     ) -> Dict:
-        """应用论文改进"""
+        """使用 LLM 改进论文"""
+        if self.model_client is None:
+            # 如果没有 LLM 客户端，使用简单标记
+            return self._apply_paper_improvements_simple(current_paper, improvements)
+
+        updated = copy.deepcopy(current_paper)
+
+        for imp in improvements:
+            print(f"  Applying with LLM: {imp['description']}")
+
+            section = imp['target']
+            if section not in updated:
+                continue
+
+            current_text = updated[section]
+
+            # 构建改进 prompt
+            system_prompt = """You are an expert academic writing assistant specializing in computer vision papers for top-tier conferences like CVPR.
+Your task is to improve specific sections of a research paper based on reviewer feedback.
+Maintain academic tone, clarity, and technical accuracy.
+Keep the length appropriate for the section type."""
+
+            prompt = f"""Please improve the following {section} section of a CVPR paper.
+
+IMPROVEMENT NEEDED: {imp['description']}
+RATIONALE: {imp.get('rationale', 'N/A')}
+
+CURRENT TEXT:
+{current_text}
+
+Please rewrite this section addressing the improvement needed. Maintain the same general structure but enhance:
+- Clarity and flow
+- Technical precision
+- Academic tone
+- Completeness (add missing details as specified)
+
+Provide only the improved text, no explanations."""
+
+            try:
+                response = self.model_client.generate(prompt, system_prompt)
+                if not response.error:
+                    updated[section] = response.content
+                    print(f"    ✓ Successfully improved {section}")
+                else:
+                    print(f"    ⚠️ LLM error: {response.error}")
+                    # 保留原文
+            except Exception as e:
+                print(f"    ⚠️ Failed to apply improvement: {e}")
+
+        return updated
+
+    def _apply_paper_improvements_simple(self, current_paper: Dict, improvements: List[Dict]) -> Dict:
+        """简单改进（无 LLM）"""
         updated = copy.deepcopy(current_paper)
 
         for imp in improvements:
             print(f"  Applying: {imp['description']}")
-
-            # 这里应该调用 LLM 来实际改进文本
-            # 简化版：添加标记表示已修改
             section = imp['target']
             if section in updated:
                 updated[section] = updated[section] + f"\n\n[IMPROVED: {imp['subtype']}]"
