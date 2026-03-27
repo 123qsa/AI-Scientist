@@ -1,0 +1,64 @@
+# 4x RTX 4090 (24GB) 服务器配置
+# 总显存: 96GB
+# 适合: ImageNet训练、COCO检测、ADE20K分割
+
+[system]
+gpu_count = 4
+gpu_memory = "24GB"
+gpu_model = "RTX 4090"
+total_memory = "96GB"
+
+[training]
+# ImageNet分类
+imagenet_batch_size = 256  # 64 per GPU
+imagenet_workers = 16
+
+# COCO检测
+coco_batch_size = 8  # 2 per GPU (detection needs more memory)
+coco_workers = 8
+
+# ADE20K分割
+ade20k_batch_size = 16  # 4 per GPU
+ade20k_workers = 8
+
+# 分布式训练
+distributed = true
+backend = "nccl"
+find_unused_parameters = false
+
+# 混合精度 (4090支持FP16/BF16)
+amp = true
+amp_dtype = "bf16"  # 4090支持BF16，更稳定
+
+# 编译加速 (PyTorch 2.0+)
+compile = true
+compile_mode = "default"
+
+[memory]
+# 梯度检查点 (节省显存)
+gradient_checkpointing = true
+
+# 梯度累积 (模拟大batch)
+gradient_accumulation_steps = 1
+
+# 清空缓存频率
+cache_clear_freq = 100
+
+[optimization]
+# 4090计算能力很强，可以使用更大的学习率
+base_lr = 0.001
+warmup_epochs = 5
+weight_decay = 0.05
+
+# 优化器
+optimizer = "AdamW"
+fused_adam = true  # 使用融合kernel加速
+
+[monitoring]
+# 监控频率
+log_freq = 10
+val_freq = 1000
+save_freq = 5000
+
+# 显存监控
+memory_monitor = true
